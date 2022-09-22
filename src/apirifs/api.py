@@ -1,13 +1,25 @@
 """ FastAPI"""
 
-from fastapi import Depends, FastAPI
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import HTTPBearer
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from apirifs.models.model_example import User, Book, Borrow
+from apirifs.settings import Settings
+
+settings = Settings()
+security = HTTPBearer()
+secret_key = settings.security_admin_password
 
 app = FastAPI()
+app.add_middleware(HTTPSRedirectMiddleware)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="dev")
+def api_key_auth(api_key: str = Depends(security)):
+    if api_key.credentials != secret_key.get_secret_value():
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="UNAUTHORIZED"
+        )
 
 
 @app.get("/health")
@@ -16,8 +28,8 @@ async def healthcheck():
     return 200
 
 
-@app.post("/user", status_code=202)
-async def create_user(user: User, token: str = Depends(oauth2_scheme)):
+@app.post("/user", status_code=202, dependencies=[Depends(api_key_auth)])
+async def create_user(user: User): 
     """Create user endpoint
 
     Parameters
@@ -35,8 +47,8 @@ async def create_user(user: User, token: str = Depends(oauth2_scheme)):
     return {"message": "User created", "user": user}
 
 
-@app.get("/user/{user_id}", status_code=200)
-async def get_user(user_id, token: str = Depends(oauth2_scheme)):
+@app.get("/user/{user_id}", status_code=200, dependencies=[Depends(api_key_auth)])
+async def get_user(user_id):
     """Get user endpoint
 
     Parameters
@@ -54,8 +66,8 @@ async def get_user(user_id, token: str = Depends(oauth2_scheme)):
     return 200
 
 
-@app.patch("/user/{user_id}", status_code=202)
-async def patch_user(user_id, user: User, token: str = Depends(oauth2_scheme)):
+@app.patch("/user/{user_id}", status_code=202, dependencies=[Depends(api_key_auth)])
+async def patch_user(user_id, user: User):
     """Update user endpoint
 
     Parameters
@@ -75,119 +87,3 @@ async def patch_user(user_id, user: User, token: str = Depends(oauth2_scheme)):
     return {"message": "User updated", "user": user}
 
 
-@app.post("/book", status_code=202)
-async def create_book(book: Book, token: str = Depends(oauth2_scheme)):
-    """Create book endpoint
-
-    Parameters
-    ----------
-    book : Book
-        Book object
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return {"message": "Book created", "book": book}
-
-
-@app.get("/book/{book_id}", status_code=200)
-async def get_book(book_id, token: str = Depends(oauth2_scheme)):
-    """Get book endpoint
-
-    Parameters
-    ----------
-    book_id : str
-        Book id
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return 200
-
-
-@app.patch("/book/{book_id}", status_code=200)
-async def patch_book(book_id, book: Book, token: str = Depends(oauth2_scheme)):
-    """Update user endpoint
-
-    Parameters
-    ----------
-    book_id : str
-        Book id
-    book : Book
-        Book object
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return {"message": "Book updated", "book": book}
-
-
-@app.post("/borrow", status_code=202)
-async def create_borrow(borrow: Borrow, token: str = Depends(oauth2_scheme)):
-    """Create borrow endpoint
-
-    Parameters
-    ----------
-    borrow : Borrow
-        Borrow object
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return {"message": "Borrow created", "borrow": borrow}
-
-
-@app.get("/borrow/{borrow_id}", status_code=200)
-async def get_borrow(borrow_id, token: str = Depends(oauth2_scheme)):
-    """Get book endpoint
-
-    Parameters
-    ----------
-    borrow_id : str
-        Borrow id
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return 200
-
-
-@app.patch("/borrow/{borrow_id}", status_code=200)
-async def patch_borrow(borrow_id, borrow: Borrow, token: str = Depends(oauth2_scheme)):
-    """Update user endpoint
-
-    Parameters
-    ----------
-    borrow_id : str
-        Borrow id
-    borrow : Borrow
-        Borrow object
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return {"message": "Borrow updated", "borrow": borrow}
