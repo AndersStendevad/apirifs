@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
-from apirifs.models.model_example import User, Book, Borrow
+from apirifs.models import Run, Metric
 from apirifs.settings import Settings
 
 settings = Settings()
@@ -28,14 +28,14 @@ async def healthcheck():
     return 200
 
 
-@app.post("/user", status_code=202, dependencies=[Depends(api_key_auth)])
-async def create_user(user: User): 
-    """Create user endpoint
+@app.post("/metric", status_code=201, dependencies=[Depends(api_key_auth)])
+async def create_metric(metric: Metric): 
+    """Create metric endpoint
 
     Parameters
     ----------
-    user : User
-        User object
+    metric : Metric
+        Metric object
 
     Returns
     -------
@@ -44,17 +44,18 @@ async def create_user(user: User):
     status_code: int
         Status code
     """
-    return {"message": "User created", "user": user}
 
+    print(metric)
+    return status.HTTP_201_CREATED
 
-@app.get("/user/{user_id}", status_code=200, dependencies=[Depends(api_key_auth)])
-async def get_user(user_id):
-    """Get user endpoint
+@app.post("/run", status_code=201, dependencies=[Depends(api_key_auth)])
+async def create_run(run: Run): 
+    """Create run endpoint
 
     Parameters
     ----------
-    user_id : str
-        User id
+    run : Run
+        Run object
 
     Returns
     -------
@@ -63,27 +64,7 @@ async def get_user(user_id):
     status_code: int
         Status code
     """
-    return 200
 
-
-@app.patch("/user/{user_id}", status_code=202, dependencies=[Depends(api_key_auth)])
-async def patch_user(user_id, user: User):
-    """Update user endpoint
-
-    Parameters
-    ----------
-    user_id : str
-        User id
-    user : User
-        User object
-
-    Returns
-    -------
-    response: str
-        Response in json format
-    status_code: int
-        Status code
-    """
-    return {"message": "User updated", "user": user}
-
+    print(run)
+    return status.HTTP_201_CREATED
 
