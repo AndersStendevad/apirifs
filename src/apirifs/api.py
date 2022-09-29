@@ -6,10 +6,13 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 
 from apirifs.models import Run, Metric
 from apirifs.settings import Settings
+from apirifs.store import Store
 
 settings = Settings()
 security = HTTPBearer()
 secret_key = settings.security_admin_password
+
+runs = Store("runs")
 
 app = FastAPI()
 app.add_middleware(HTTPSRedirectMiddleware)
@@ -29,7 +32,7 @@ async def healthcheck():
 
 
 @app.post("/metric", status_code=201, dependencies=[Depends(api_key_auth)])
-async def create_metric(metric: Metric): 
+def create_metric(metric: Metric): 
     """Create metric endpoint
 
     Parameters
@@ -44,12 +47,14 @@ async def create_metric(metric: Metric):
     status_code: int
         Status code
     """
-
-    print(metric)
+    key = metric.epoch
+    value = metric.dict()
+    metrics = Store(metric.run_id)
+    metrics.insert(key, value)
     return status.HTTP_201_CREATED
 
 @app.post("/run", status_code=201, dependencies=[Depends(api_key_auth)])
-async def create_run(run: Run): 
+def create_run(run: Run): 
     """Create run endpoint
 
     Parameters
@@ -64,7 +69,8 @@ async def create_run(run: Run):
     status_code: int
         Status code
     """
-
-    print(run)
+    key = run.run_id
+    value = run.dict()
+    runs.insert(key, value)
     return status.HTTP_201_CREATED
 
