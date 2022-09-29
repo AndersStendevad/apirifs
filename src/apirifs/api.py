@@ -5,6 +5,7 @@ import pandas as pd
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.responses import Response
 
 from apirifs.models import Run, Metric
 from apirifs.settings import Settings
@@ -137,7 +138,7 @@ def csv_runs():
     response: str
         csv
     """
-    return pd.DataFrame(runs_store.values()).to_csv(index=False)
+    return Response(content=pd.DataFrame(runs_store.values()).to_csv(index=False), media_type="text/csv")
 
 
 @app.get("/csv/runs/{run_id}", dependencies=[Depends(api_key_auth)])
@@ -150,4 +151,4 @@ def csv_run(run_id: str):
         csv
     """
     metrics = Store(run_id)
-    return pd.DataFrame(metrics.values()).to_csv(index=False)
+    return Response(content=pd.DataFrame(metrics.values()).to_csv(index=False), media_type="text/csv")

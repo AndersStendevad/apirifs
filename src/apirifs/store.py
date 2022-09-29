@@ -26,8 +26,8 @@ class Store:
 
     def __getitem__(self, key: str):
         """Get an item from the store"""
-        with dbm.open(self.filename, "r") as db:
-            return json.loads(db[str(key)])
+        with dbm.open(self.filename, "c") as db:
+            return json.loads(db[key])
 
     def __setitem__(self, key: str, value: dict):
         """Set an item from the store"""
@@ -37,27 +37,27 @@ class Store:
     def __delitem__(self, key: str):
         """Delete an item from the store"""
         with dbm.open(self.filename, "c") as db:
-            del db[str(key)]
+            del db[key]
 
     def __iter__(self):
         """Iterate over items from the store"""
-        with dbm.open(self.filename, "r") as db:
+        with dbm.open(self.filename, "c") as db:
             return iter(db)
 
     def __len__(self):
         """Return the number of items in the store"""
-        with dbm.open(self.filename, "r") as db:
+        with dbm.open(self.filename, "c") as db:
             return len(db)
 
     def __contains__(self, key: str):
         """Check if the store contains a key"""
-        with dbm.open(self.filename, "r") as db:
-            return str(key) in db
+        with dbm.open(self.filename, "c") as db:
+            return key in db
 
     def keys(self):
         """Return the keys of the store"""
-        with dbm.open(self.filename, "r") as db:
-            return (str(key) for key in db.keys())
+        with dbm.open(self.filename, "c") as db:
+            return (key for key in db.keys())
 
     def values(self):
         """Return the values of the store"""
