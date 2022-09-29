@@ -19,11 +19,11 @@ runs_store = Store("runs")
 app = FastAPI()
 app.add_middleware(HTTPSRedirectMiddleware)
 
+
 def api_key_auth(api_key: str = Depends(security)):
     if api_key.credentials != secret_key.get_secret_value():
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="UNAUTHORIZED"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="UNAUTHORIZED"
         )
 
 
@@ -33,8 +33,9 @@ async def healthcheck():
     """Healthcheck endpoint"""
     return 200
 
+
 @app.post("/metric", status_code=201, dependencies=[Depends(api_key_auth)])
-def create_metric(metric: Metric): 
+def create_metric(metric: Metric):
     """Create metric endpoint
 
     Parameters
@@ -55,8 +56,9 @@ def create_metric(metric: Metric):
     metrics.insert(key, value)
     return status.HTTP_201_CREATED
 
+
 @app.post("/run", status_code=201, dependencies=[Depends(api_key_auth)])
-def create_run(run: Run): 
+def create_run(run: Run):
     """Create run endpoint
 
     Parameters
@@ -76,6 +78,7 @@ def create_run(run: Run):
     runs_store.insert(key, value)
     return status.HTTP_201_CREATED
 
+
 @app.get("/objects", dependencies=[Depends(api_key_auth)])
 def get_objects():
     """Grafana search endpoint
@@ -85,12 +88,12 @@ def get_objects():
     response: List
         Response list of objects
     """
-    return ["run", "runs", "run_ids",  "metrics"]
+    return ["run", "runs", "run_ids", "metrics"]
 
 
 @app.get("/runs", dependencies=[Depends(api_key_auth)])
 def runs():
-    """ Grafana query endpoint
+    """Grafana query endpoint
 
     Returns
     -------
@@ -99,9 +102,10 @@ def runs():
     """
     return runs_store.values()
 
+
 @app.get("/runs_ids", dependencies=[Depends(api_key_auth)])
 def runs_ids():
-    """ Grafana query endpoint
+    """Grafana query endpoint
 
     Returns
     -------
@@ -111,10 +115,9 @@ def runs_ids():
     return runs_store.keys()
 
 
-
 @app.get("/run/{run_id}", dependencies=[Depends(api_key_auth)])
 def get_run(run_id: str):
-    """ Grafana query endpoint
+    """Grafana query endpoint
 
     Returns
     -------
@@ -127,7 +130,7 @@ def get_run(run_id: str):
 
 @app.get("/csv/runs", dependencies=[Depends(api_key_auth)])
 def csv_runs():
-    """ Grafana query endpoint
+    """Grafana query endpoint
 
     Returns
     -------
@@ -139,7 +142,7 @@ def csv_runs():
 
 @app.get("/csv/runs/{run_id}", dependencies=[Depends(api_key_auth)])
 def csv_run(run_id: str):
-    """ Grafana query endpoint
+    """Grafana query endpoint
 
     Returns
     -------
