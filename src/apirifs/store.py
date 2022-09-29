@@ -22,55 +22,60 @@ class Store:
             The location of the database
         """
         self.filename = join(db_location, db_name+".db")
-        self.db = dbm.open(self.filename, 'c')
-        atexit.register(self.db.close)
 
     def __getitem__(self, key: str):
         """ Get an item from the store """
-        return json.loads(self.db[key].decode('utf-8'))
+        with dbm.open(self.filename, 'r') as db:
+            return json.loads(db[str(key)])
 
     def __setitem__(self, key: str, value: dict):
         """ Set an item from the store """
-        self.db[key] = json.dumps(value).encode('utf-8')
+        with dbm.open(self.filename, 'c') as db:
+            db[str(key)] = json.dumps(value, separators=(',', ':'))
 
     def __delitem__(self, key: str):
         """ Delete an item from the store """
-        del self.db[key]
+        with dbm.open(self.filename, 'c') as db:
+            del db[str(key)]
 
     def __iter__(self):
         """ Iterate over items from the store """
-        return iter(self.db)
+        with dbm.open(self.filename, 'r') as db:
+            return iter(db)
 
     def __len__(self):
         """ Return the number of items in the store """
-        return len(self.db)
+        with dbm.open(self.filename, 'r') as db:
+            return len(db)
 
     def __contains__(self, key: str):
         """ Check if the store contains a key """
-        return key in self.db
+        with dbm.open(self.filename, 'r') as db:
+            return str(key) in db
 
     def keys(self):
         """ Return the keys of the store """
-        return self.db.keys()
+        with dbm.open(self.filename, 'r') as db:
+            return (str(key) for key in db.keys())
 
     def values(self):
         """ Return the values of the store """
-        return (json.loads(value.decode('utf-8')) for value in self.db.values())
+        return (json.loads(self[key]) for key in self.keys())
 
     def items(self):
         """ Return the items of the store """
-        return ((key, json.loads(value.decode('utf-8'))) for key, value in self.db.items())
+        return ((key, json.loads(self[key])) for key in self.keys())
 
     def get(self, key: str, default=None):
         """ Get an item from the store """
         try:
-            return self[key]
+            return self[str(key)]
         except KeyError:
             return default
 
     def insert(self, key: str, value: dict):
         """ Insert an item into the store """
-        self[key] = value
+        self[str(key)] = json.dumps(value)
 
     def __repr__(self):
         """ Return the representation of the store """

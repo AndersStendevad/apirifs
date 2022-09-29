@@ -1,5 +1,7 @@
 """ FastAPI"""
 
+import pandas as pd
+
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBearer
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -12,7 +14,7 @@ settings = Settings()
 security = HTTPBearer()
 secret_key = settings.security_admin_password
 
-runs = Store("runs")
+runs_store = Store("runs")
 
 app = FastAPI()
 app.add_middleware(HTTPSRedirectMiddleware)
@@ -25,11 +27,11 @@ def api_key_auth(api_key: str = Depends(security)):
         )
 
 
+@app.get("/")
 @app.get("/health")
 async def healthcheck():
     """Healthcheck endpoint"""
     return 200
-
 
 @app.post("/metric", status_code=201, dependencies=[Depends(api_key_auth)])
 def create_metric(metric: Metric): 
@@ -71,6 +73,78 @@ def create_run(run: Run):
     """
     key = run.run_id
     value = run.dict()
-    runs.insert(key, value)
+    runs_store.insert(key, value)
     return status.HTTP_201_CREATED
 
+@app.get("/objects", dependencies=[Depends(api_key_auth)])
+def get_objects():
+    """Grafana search endpoint
+
+    Returns
+    -------
+    response: List
+        Response list of objects
+    """
+    return ["run", "runs", "run_ids",  "metrics"]
+
+
+@app.get("/runs", dependencies=[Depends(api_key_auth)])
+def runs():
+    """ Grafana query endpoint
+
+    Returns
+    -------
+    response: List
+        Response in list of json
+    """
+    return runs_store.values()
+
+@app.get("/runs_ids", dependencies=[Depends(api_key_auth)])
+def runs_ids():
+    """ Grafana query endpoint
+
+    Returns
+    -------
+    response: List
+        Response in list of ids
+    """
+    return runs_store.keys()
+
+
+
+@app.get("/run/{run_id}", dependencies=[Depends(api_key_auth)])
+def get_run(run_id: str):
+    """ Grafana query endpoint
+
+    Returns
+    -------
+    response: List
+        Response in list of json
+    """
+    metrics = Store(run_id)
+    return metrics.values()
+
+
+@app.get("/csv/runs", dependencies=[Depends(api_key_auth)])
+def csv_runs():
+    """ Grafana query endpoint
+
+    Returns
+    -------
+    response: str
+        csv
+    """
+    return pd.DataFrame(runs_store.values()).to_csv(index=False)
+
+
+@app.get("/csv/runs/{run_id}", dependencies=[Depends(api_key_auth)])
+def csv_run(run_id: str):
+    """ Grafana query endpoint
+
+    Returns
+    -------
+    response: str
+        csv
+    """
+    metrics = Store(run_id)
+    return pd.DataFrame(metrics.values()).to_csv(index=False)
