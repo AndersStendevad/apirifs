@@ -1,13 +1,10 @@
 from pydantic import BaseModel, Field, ValidationError, validator, Extra
 
-from datetime import datetime
-
-
 class Run(BaseModel):
     """Run Model"""
 
     run_id: str
-    start_time: datetime
+    start_time: str
     model: str
     lr: float
     batch_size: int
