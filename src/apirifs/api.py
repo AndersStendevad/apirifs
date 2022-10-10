@@ -127,6 +127,13 @@ def get_run(run_id: str):
     """
     metrics = Store(run_id)
     return metrics.values()
+@app.delete("/run/{run_id}", dependencies=[Depends(api_key_auth)])
+def delete_run(run_id: str):
+    """Delete run from runs. But do not delete metrics
+
+    """
+    del runs_store[run_id]
+    return status.HTTP_204_NO_CONTENT
 
 
 @app.get("/csv/runs", dependencies=[Depends(api_key_auth)])
@@ -138,7 +145,11 @@ def csv_runs():
     response: str
         csv
     """
-    return Response(content=pd.DataFrame(runs_store.values()).to_csv(index=False), media_type="text/csv")
+
+    df = pd.DataFrame(runs_store.values())
+    if not df.empty:
+        df = df.sort_values(by=['start_time'], ascending=False)
+    return Response(content=df.to_csv(index=False), media_type="text/csv")
 
 
 @app.get("/csv/runs/{run_id}", dependencies=[Depends(api_key_auth)])
@@ -151,4 +162,10 @@ def csv_run(run_id: str):
         csv
     """
     metrics = Store(run_id)
-    return Response(content=pd.DataFrame(metrics.values()).to_csv(index=False), media_type="text/csv")
+    df = pd.DataFrame(metrics.values())
+    if not df.empty:
+        if "step" in df.columns:
+            df = df.sort_values(by=['step'])
+        else:
+            df = df.sort_values(by=['epoch'])
+    return Response(content=df.to_csv(index=False), media_type="text/csv")

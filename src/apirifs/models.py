@@ -19,3 +19,6 @@ class Metric(BaseModel):
     eval_loss: float
     eval_wer: float
     learning_rate: float
+    step: int
+    pred_str: str
+    target_str: str
