@@ -15,10 +15,10 @@ class Metric(BaseModel):
 
     run_id: str
     epoch: int
+    step: int
     loss: float
     eval_loss: float
     eval_wer: float
     learning_rate: float
-    step: int
     pred_str: str
-    target_str: str
+    label_str: str

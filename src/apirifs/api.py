@@ -51,7 +51,7 @@ def create_metric(metric: Metric):
     status_code: int
         Status code
     """
-    key = metric.epoch
+    key = metric.step
     value = metric.dict()
     metrics = Store(metric.run_id)
     metrics.insert(key, value)
