@@ -188,8 +188,8 @@ def create_status(status_object: Status):
     status_code: int
         Status code
     """
-    key = status.run_id
-    value = status.dict()
+    key = status_object.run_id
+    value = status_object.dict()
     status_store.insert(key, value)
     return status.HTTP_201_CREATED
 
@@ -202,8 +202,9 @@ def csv_status(run_id: str):
     response: str
         csv
     """
-    df = pd.DataFrame(status_store)
+    df = pd.DataFrame(status_store.values())
     if not df.empty:
+        df = df.loc[df['run_id'] == run_id]
         df = df.drop(columns=["run_id"])
     return Response(content=df.to_csv(index=False), media_type="text/csv")
 
