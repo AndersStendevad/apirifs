@@ -10,6 +10,23 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
+  api:
+    build: .
+    ports:
+      - 443:443
+    volumes:
+      - type: bind
+        source: /root/db
+        target: /root/db
+      - type: bind
+        source: /etc/letsencrypt
+        target: /etc/letsencrypt
+      - type: bind
+        source: /etc/ssl
+        target: /etc/ssl
+
+
+
 volumes:
   grafana_data:
     driver: local

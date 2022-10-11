@@ -22,3 +22,9 @@ class Metric(BaseModel):
     learning_rate: float
     pred_str: str
     label_str: str
+
+class Status(BaseModel):
+    """Status Model"""
+
+    run_id: str
+    status: str

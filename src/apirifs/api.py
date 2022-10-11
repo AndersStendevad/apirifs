@@ -7,7 +7,7 @@ from fastapi.security import HTTPBearer
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from fastapi.responses import Response
 
-from apirifs.models import Run, Metric
+from apirifs.models import Run, Metric, Status
 from apirifs.settings import Settings
 from apirifs.store import Store
 
@@ -16,6 +16,7 @@ security = HTTPBearer()
 secret_key = settings.security_admin_password
 
 runs_store = Store("runs")
+status_store = Store("status")
 
 app = FastAPI()
 app.add_middleware(HTTPSRedirectMiddleware)
@@ -89,7 +90,7 @@ def get_objects():
     response: List
         Response list of objects
     """
-    return ["run", "runs", "run_ids", "metrics"]
+    return ["run", "runs", "run_ids", "metrics", "status"]
 
 
 @app.get("/runs", dependencies=[Depends(api_key_auth)])
@@ -127,6 +128,7 @@ def get_run(run_id: str):
     """
     metrics = Store(run_id)
     return metrics.values()
+
 @app.delete("/run/{run_id}", dependencies=[Depends(api_key_auth)])
 def delete_run(run_id: str):
     """Delete run from runs. But do not delete metrics
@@ -169,3 +171,40 @@ def csv_run(run_id: str):
         else:
             df = df.sort_values(by=['epoch'])
     return Response(content=df.to_csv(index=False), media_type="text/csv")
+
+@app.post("/status", status_code=201, dependencies=[Depends(api_key_auth)])
+def create_status(status_object: Status):
+    """Create status endpoint
+
+    Parameters
+    ----------
+    status_object : Status
+        Status object
+
+    Returns
+    -------
+    response: str
+        Response in json format
+    status_code: int
+        Status code
+    """
+    key = status.run_id
+    value = status.dict()
+    status_store.insert(key, value)
+    return status.HTTP_201_CREATED
+
+@app.get("/csv/status/{run_id}", dependencies=[Depends(api_key_auth)])
+def csv_status(run_id: str):
+    """Grafana query endpoint
+
+    Returns
+    -------
+    response: str
+        csv
+    """
+    df = pd.DataFrame(status_store)
+    if not df.empty:
+        df = df.drop(columns=["run_id"])
+    return Response(content=df.to_csv(index=False), media_type="text/csv")
+
+
