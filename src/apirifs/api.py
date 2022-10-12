@@ -151,6 +151,8 @@ def csv_runs():
     df = pd.DataFrame(runs_store.values())
     if not df.empty:
         df = df.sort_values(by=['start_time'], ascending=False)
+    else:
+        df = pd.DataFrame(columns=Run.__fields__.keys())
     return Response(content=df.to_csv(index=False), media_type="text/csv")
 
 
@@ -170,6 +172,8 @@ def csv_run(run_id: str):
             df = df.sort_values(by=['step'])
         else:
             df = df.sort_values(by=['epoch'])
+    else:
+        df = pd.DataFrame(columns=Metric.__fields__.keys())
     return Response(content=df.to_csv(index=False), media_type="text/csv")
 
 @app.post("/status", status_code=201, dependencies=[Depends(api_key_auth)])
@@ -206,6 +210,8 @@ def csv_status(run_id: str):
     if not df.empty:
         df = df.loc[df['run_id'] == run_id]
         df = df.drop(columns=["run_id"])
+    else:
+        df = pd.DataFrame(columns=Status.__fields__.keys())
     return Response(content=df.to_csv(index=False), media_type="text/csv")
 
 
